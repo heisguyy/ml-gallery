@@ -8,16 +8,13 @@ https://www.youtube.com/watch?v=VMj-3S1tku0
 import math
 import random
 from typing import List, Tuple, Union
-
 from graphviz import Digraph
-
 
 class Scaler:
     """
     This is a wrapper around a scaler value. It is a more toned down version
     of a matrix which is what you will expect in an actual neural network.
     """
-
     def __init__(
         self,
         data: Union[int, float],
@@ -211,7 +208,7 @@ class Neuron:
         output = sum([w * x for w, x in zip(self.weights, inputs)], self.bias)
         activated_output = output.tanh()
         return activated_output
-    
+
     def parameters(self) -> List[Scaler]:
         """
         Function to return all the parameters(weights and bias) for the neuron.
