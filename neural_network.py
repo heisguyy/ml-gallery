@@ -10,11 +10,13 @@ import random
 from typing import List, Tuple, Union
 from graphviz import Digraph
 
+
 class Scaler:
     """
     This is a wrapper around a scaler value. It is a more toned down version
     of a matrix which is what you will expect in an actual neural network.
     """
+
     def __init__(
         self,
         data: Union[int, float],
@@ -214,7 +216,7 @@ class Neuron:
         Function to return all the parameters(weights and bias) for the neuron.
 
         Returns:
-            List[Scaler]: A list of the parameters 
+            List[Scaler]: A list of the parameters
         """
         neuron_paramters = self.weights + [self.bias]
         return neuron_paramters
@@ -244,10 +246,12 @@ class Layer:
         ]
         return layer_parameters
 
+
 class MLP:
     """
     This class is an implementation of a multi-layer perceptron.
     """
+
     def __init__(
         self, number_of_inputs: int, hidden_layers: List, number_of_outputs: int
     ) -> None:
@@ -274,6 +278,7 @@ class MLP:
         ]
         return network_parameters
 
+
 def train(model: MLP, data: List[List], targets: List, epochs: int = 10):
     """
     Function to train the MLP using simple gradient descent.
@@ -286,9 +291,9 @@ def train(model: MLP, data: List[List], targets: List, epochs: int = 10):
         Defaults to 10.
     """
     learning_rate = 0.1
-    for epoch in range(1,epochs+1):
+    for epoch in range(1, epochs + 1):
         y_preds = [model(feature) for feature in data]
-        loss = sum((y_pred-target)**2 for y_pred,target in zip(y_preds, targets))
+        loss = sum((y_pred - target) ** 2 for y_pred, target in zip(y_preds, targets))
         print(f"Epoch {epoch}: {loss.data}")
         for parameter in model.parameters():
             parameter.grad = 0.0
