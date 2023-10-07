@@ -3,7 +3,7 @@ This is an implementation of A Neural Probabilistic Language Model by Bengio et 
 It is a code along with Andrej Karpathy's zero to hero neural network series.
 https://www.youtube.com/watch?v=TCH_1BHY58I&t=236s
 """
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name, invalid-name
 import random
 from typing import Tuple, List
 import matplotlib.pyplot as plt
@@ -123,7 +123,7 @@ def train(
             logits = hidden_layer_output @ parameters[3] + parameters[4]
             val_loss = F.cross_entropy(logits, val_set[1][batch_index])
             losses["validation loss"].append(val_loss.item())
-        if epoch % 1000 == 0:
+        if epoch % 1000 == 0 or epoch == 1:
             print(
                 f"Epoch {epoch} Training Loss: {train_loss}, Validation Loss: {val_loss}"
             )
@@ -161,29 +161,45 @@ labels = torch.tensor(labels, device=DEVICE)
 HIDDEN_LAYER = 200
 EMBEDDING_LENGTH = 10
 generator = torch.Generator(device=DEVICE).manual_seed(10)
-embedding_layer = torch.randn(
+embedding_layer = torch.normal(
+    0,
+    0.1,
     (len(unique_characters), EMBEDDING_LENGTH),
     device=DEVICE,
     requires_grad=True,
     generator=generator,
 )
-weights_1 = torch.randn(
+weights_1 = torch.normal(
+    0,
+    0.1,
     (BLOCK_SIZE * EMBEDDING_LENGTH, HIDDEN_LAYER),
     device=DEVICE,
     requires_grad=True,
     generator=generator,
 )
-bias_1 = torch.randn(
-    HIDDEN_LAYER, device=DEVICE, requires_grad=True, generator=generator
+bias_1 = torch.normal(
+    0,
+    0.1,
+    (1,HIDDEN_LAYER),
+    device=DEVICE,
+    requires_grad=True,
+    generator=generator
 )
-weights_2 = torch.randn(
+weights_2 = torch.normal(
+    0,
+    0.1,
     (HIDDEN_LAYER, len(unique_characters)),
     device=DEVICE,
     requires_grad=True,
     generator=generator,
 )
-bias_2 = torch.randn(
-    len(unique_characters), device=DEVICE, requires_grad=True, generator=generator
+bias_2 = torch.normal(
+    0,
+    0.1,
+    (1,len(unique_characters)),
+    device=DEVICE,
+    requires_grad=True,
+    generator=generator
 )
 parameters = [embedding_layer, weights_1, bias_1, weights_2, bias_2]
 
@@ -216,36 +232,52 @@ LEARNING_RATE = 10**best_lr_exp
 print(f"\nBest learning rate is {LEARNING_RATE}\n")
 
 generator = torch.Generator(device=DEVICE).manual_seed(10)
-embedding_layer = torch.randn(
+embedding_layer = torch.normal(
+    0,
+    0.1,
     (len(unique_characters), EMBEDDING_LENGTH),
     device=DEVICE,
     requires_grad=True,
     generator=generator,
 )
-weights_1 = torch.randn(
+weights_1 = torch.normal(
+    0,
+    0.1,
     (BLOCK_SIZE * EMBEDDING_LENGTH, HIDDEN_LAYER),
     device=DEVICE,
     requires_grad=True,
     generator=generator,
 )
-bias_1 = torch.randn(
-    HIDDEN_LAYER, device=DEVICE, requires_grad=True, generator=generator
+bias_1 = torch.normal(
+    0,
+    0.1,
+    (1,HIDDEN_LAYER),
+    device=DEVICE,
+    requires_grad=True,
+    generator=generator
 )
-weights_2 = torch.randn(
+weights_2 = torch.normal(
+    0,
+    0.1,
     (HIDDEN_LAYER, len(unique_characters)),
     device=DEVICE,
     requires_grad=True,
     generator=generator,
 )
-bias_2 = torch.randn(
-    len(unique_characters), device=DEVICE, requires_grad=True, generator=generator
+bias_2 = torch.normal(
+    0,
+    0.1,
+    (1,len(unique_characters)),
+    device=DEVICE,
+    requires_grad=True,
+    generator=generator
 )
 parameters = [embedding_layer, weights_1, bias_1, weights_2, bias_2]
 EPOCHS = 200000
 
 wandb.init(
     project="ml-gallery",
-    name="mlp_classifier",
+    name="mlp_classifier-uniform",
     config={
         "BLOCK_SIZE": BLOCK_SIZE,
         "HIDDEN_LAYER": HIDDEN_LAYER,
