@@ -241,7 +241,7 @@ bias_2 = torch.randn(
     len(unique_characters), device=DEVICE, requires_grad=True, generator=generator
 )
 parameters = [embedding_layer, weights_1, bias_1, weights_2, bias_2]
-EPOCHS = 300000
+EPOCHS = 200000
 
 wandb.init(
     project="ml-gallery",
