@@ -100,7 +100,11 @@ def train(
             embeddings.view(-1, BLOCK_SIZE * EMBEDDING_LENGTH) @ parameters[1]
             + parameters[2]
         )
-        logits = embeddings.view(-1, BLOCK_SIZE * EMBEDDING_LENGTH) @ parameters[3] + hidden_layer_output @ parameters[4] + parameters[5]
+        logits = (
+            embeddings.view(-1, BLOCK_SIZE * EMBEDDING_LENGTH) @ parameters[3]
+            + hidden_layer_output @ parameters[4]
+            + parameters[5]
+        )
         train_loss = F.cross_entropy(logits, training_set[1][batch_index])
         losses["training loss"].append(train_loss.item())
         for parameter in parameters:
@@ -120,7 +124,11 @@ def train(
                 embeddings.view(-1, BLOCK_SIZE * EMBEDDING_LENGTH) @ parameters[1]
                 + parameters[2]
             )
-            logits = embeddings.view(-1, BLOCK_SIZE * EMBEDDING_LENGTH) @ parameters[3] + hidden_layer_output @ parameters[4] + parameters[5]
+            logits = (
+                embeddings.view(-1, BLOCK_SIZE * EMBEDDING_LENGTH) @ parameters[3]
+                + hidden_layer_output @ parameters[4]
+                + parameters[5]
+            )
             val_loss = F.cross_entropy(logits, val_set[1][batch_index])
             losses["validation loss"].append(val_loss.item())
         if epoch % 1000 == 0 or epoch == 1:
@@ -178,12 +186,7 @@ weights_1 = torch.normal(
     generator=generator,
 )
 bias_1 = torch.normal(
-    0,
-    0.1,
-    (1,HIDDEN_LAYER),
-    device=DEVICE,
-    requires_grad=True,
-    generator=generator
+    0, 0.1, (1, HIDDEN_LAYER), device=DEVICE, requires_grad=True, generator=generator
 )
 weights_2 = torch.normal(
     0,
@@ -196,20 +199,27 @@ weights_2 = torch.normal(
 bias_2 = torch.normal(
     0,
     0.1,
-    (1,len(unique_characters)),
+    (1, len(unique_characters)),
     device=DEVICE,
     requires_grad=True,
-    generator=generator
+    generator=generator,
 )
 direct_connection_weights = torch.normal(
     0,
     0.1,
-    (BLOCK_SIZE * EMBEDDING_LENGTH,len(unique_characters)),
+    (BLOCK_SIZE * EMBEDDING_LENGTH, len(unique_characters)),
     device=DEVICE,
     requires_grad=True,
-    generator=generator
+    generator=generator,
 )
-parameters = [embedding_layer, weights_1, bias_1, direct_connection_weights, weights_2, bias_2]
+parameters = [
+    embedding_layer,
+    weights_1,
+    bias_1,
+    direct_connection_weights,
+    weights_2,
+    bias_2,
+]
 
 EPOCHS = 1000
 learning_rate_exp = torch.linspace(-3, 0, EPOCHS, device=DEVICE)
@@ -221,7 +231,11 @@ for epoch in range(1, EPOCHS + 1):
     hidden_layer_output = torch.tanh(
         embeddings.view(-1, BLOCK_SIZE * EMBEDDING_LENGTH) @ weights_1 + bias_1
     )
-    logits = embeddings.view(-1, BLOCK_SIZE * EMBEDDING_LENGTH) @ direct_connection_weights + hidden_layer_output @ weights_2 + bias_2
+    logits = (
+        embeddings.view(-1, BLOCK_SIZE * EMBEDDING_LENGTH) @ direct_connection_weights
+        + hidden_layer_output @ weights_2
+        + bias_2
+    )
     loss = F.cross_entropy(logits, labels[batch_index])
     losses.append(loss.item())
     for parameter in parameters:
@@ -257,12 +271,7 @@ weights_1 = torch.normal(
     generator=generator,
 )
 bias_1 = torch.normal(
-    0,
-    0.1,
-    (1,HIDDEN_LAYER),
-    device=DEVICE,
-    requires_grad=True,
-    generator=generator
+    0, 0.1, (1, HIDDEN_LAYER), device=DEVICE, requires_grad=True, generator=generator
 )
 weights_2 = torch.normal(
     0,
@@ -275,20 +284,27 @@ weights_2 = torch.normal(
 bias_2 = torch.normal(
     0,
     0.1,
-    (1,len(unique_characters)),
+    (1, len(unique_characters)),
     device=DEVICE,
     requires_grad=True,
-    generator=generator
+    generator=generator,
 )
 direct_connection_weights = torch.normal(
     0,
     0.1,
-    (BLOCK_SIZE * EMBEDDING_LENGTH,len(unique_characters)),
+    (BLOCK_SIZE * EMBEDDING_LENGTH, len(unique_characters)),
     device=DEVICE,
     requires_grad=True,
-    generator=generator
+    generator=generator,
 )
-parameters = [embedding_layer, weights_1, bias_1, direct_connection_weights, weights_2, bias_2]
+parameters = [
+    embedding_layer,
+    weights_1,
+    bias_1,
+    direct_connection_weights,
+    weights_2,
+    bias_2,
+]
 EPOCHS = 200000
 
 wandb.init(
@@ -323,7 +339,11 @@ with torch.no_grad():
         embeddings.view(-1, BLOCK_SIZE * EMBEDDING_LENGTH) @ parameters[1]
         + parameters[2]
     )
-    logits = embeddings.view(-1, BLOCK_SIZE * EMBEDDING_LENGTH) @ parameters[3] + hidden_layer_output @ parameters[4] + parameters[5]
+    logits = (
+        embeddings.view(-1, BLOCK_SIZE * EMBEDDING_LENGTH) @ parameters[3]
+        + hidden_layer_output @ parameters[4]
+        + parameters[5]
+    )
     test_loss = F.cross_entropy(logits, test_set[1])
 print(f"Test Loss: {test_loss}")
 wandb.log({"test_loss": test_loss.item()})
