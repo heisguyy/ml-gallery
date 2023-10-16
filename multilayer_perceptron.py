@@ -169,9 +169,7 @@ labels = torch.tensor(labels, device=DEVICE)
 HIDDEN_LAYER = 200
 EMBEDDING_LENGTH = 10
 generator = torch.Generator(device=DEVICE).manual_seed(10)
-embedding_layer = torch.normal(
-    0,
-    0.1,
+embedding_layer = torch.randn(
     (len(unique_characters), EMBEDDING_LENGTH),
     device=DEVICE,
     requires_grad=True,
@@ -179,34 +177,31 @@ embedding_layer = torch.normal(
 )
 weights_1 = torch.normal(
     0,
-    0.1,
+    ((5/3)/(BLOCK_SIZE * EMBEDDING_LENGTH)**0.5),
     (BLOCK_SIZE * EMBEDDING_LENGTH, HIDDEN_LAYER),
     device=DEVICE,
     requires_grad=True,
     generator=generator,
 )
-bias_1 = torch.normal(
-    0, 0.1, (1, HIDDEN_LAYER), device=DEVICE, requires_grad=True, generator=generator
+bias_1 = torch.zeros(
+    HIDDEN_LAYER, device=DEVICE, requires_grad=True
 )
 weights_2 = torch.normal(
     0,
-    0.1,
+    0.01,
     (HIDDEN_LAYER, len(unique_characters)),
     device=DEVICE,
     requires_grad=True,
     generator=generator,
 )
-bias_2 = torch.normal(
-    0,
-    0.1,
-    (1, len(unique_characters)),
+bias_2 = torch.zeros(
+    len(unique_characters),
     device=DEVICE,
     requires_grad=True,
-    generator=generator,
 )
 direct_connection_weights = torch.normal(
     0,
-    0.1,
+    0.01,
     (BLOCK_SIZE * EMBEDDING_LENGTH, len(unique_characters)),
     device=DEVICE,
     requires_grad=True,
@@ -254,9 +249,7 @@ LEARNING_RATE = 10**best_lr_exp
 print(f"\nBest learning rate is {LEARNING_RATE}\n")
 
 generator = torch.Generator(device=DEVICE).manual_seed(10)
-embedding_layer = torch.normal(
-    0,
-    0.1,
+embedding_layer = torch.randn(
     (len(unique_characters), EMBEDDING_LENGTH),
     device=DEVICE,
     requires_grad=True,
@@ -264,34 +257,31 @@ embedding_layer = torch.normal(
 )
 weights_1 = torch.normal(
     0,
-    0.1,
+    ((5/3)/(BLOCK_SIZE * EMBEDDING_LENGTH)**0.5),
     (BLOCK_SIZE * EMBEDDING_LENGTH, HIDDEN_LAYER),
     device=DEVICE,
     requires_grad=True,
     generator=generator,
 )
-bias_1 = torch.normal(
-    0, 0.1, (1, HIDDEN_LAYER), device=DEVICE, requires_grad=True, generator=generator
+bias_1 = torch.zeros(
+    HIDDEN_LAYER, device=DEVICE, requires_grad=True
 )
 weights_2 = torch.normal(
     0,
-    0.1,
+    0.01,
     (HIDDEN_LAYER, len(unique_characters)),
     device=DEVICE,
     requires_grad=True,
     generator=generator,
 )
-bias_2 = torch.normal(
-    0,
-    0.1,
-    (1, len(unique_characters)),
+bias_2 = torch.zeros(
+    len(unique_characters),
     device=DEVICE,
     requires_grad=True,
-    generator=generator,
 )
 direct_connection_weights = torch.normal(
     0,
-    0.1,
+    0.01,
     (BLOCK_SIZE * EMBEDDING_LENGTH, len(unique_characters)),
     device=DEVICE,
     requires_grad=True,
