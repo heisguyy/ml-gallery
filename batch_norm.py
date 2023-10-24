@@ -219,7 +219,7 @@ def train(
     epochs: int,
     learning_rate: float,
     batch_size: int = 128,
-) -> Tuple[Union[torch.Tensor, dict]]:
+) -> Tuple[Union[torch.Tensor, dict, List]]:
     """
     Function to train our classifier
 
@@ -237,8 +237,9 @@ def train(
         training it. It defaults to False.
 
     Returns:
-       Tuple[Union[torch.Tensor, dict]]: A tuple of the models weights,
-        and a dictionary containing both training and validations losses recorded during training.
+       Tuple[Union[torch.Tensor, dict, List]]: A tuple of the trained model,
+        ,a dictionary containing both training and validations losses recorded during trainin and
+        and update ratio.
     """
     losses = {"training loss": [], "validation loss": []}
     decayed_learning_rate = learning_rate * 0.1
@@ -249,6 +250,7 @@ def train(
     )
     for parameter in parameters:
         parameter.requires_grad = True
+    update_ratio = []
     for epoch in range(1, epochs + 1):
         batch_index = torch.randint(0, training_set[0].shape[0], (batch_size,))
 
@@ -273,11 +275,18 @@ def train(
             parameter.data += -learning_rate * parameter.grad
 
         if epoch % 1000 == 0 or epoch == 1:
-            print(
-                f"Epoch {epoch} Training Loss: {train_loss}"
+            print(f"Epoch {epoch} Training Loss: {train_loss}")
+        with torch.no_grad():
+            update_ratio.append(
+                [
+                    ((learning_rate * parameter.grad).std() / parameter.data.std())
+                    .log10()
+                    .item()
+                    for parameter in parameters
+                ]
             )
 
-    return model, losses
+    return model, losses, update_ratio
 
 
 with open("names.txt", mode="r", encoding="utf-8") as file:
@@ -330,7 +339,7 @@ with torch.no_grad():
 
 
 train_set, validation_set, test_set = split_data(features, labels)
-model, _ = train(
+model, _, update_ratio = train(
     model=model,
     training_set=train_set,
     epochs=EPOCHS,
@@ -339,7 +348,6 @@ model, _ = train(
 
 print("\nActivation distribution stats")
 plt.figure(figsize=(20, 5))
-legend = []
 for index, layer in enumerate(model):
     if isinstance(layer, Tanh):
         tanh_output = layer.output
@@ -349,14 +357,12 @@ for index, layer in enumerate(model):
             f"Saturation {(tanh_output.abs() > 0.97).float().mean()}"
         )
         y, x = torch.histogram(tanh_output.cpu(), density=True)
-        sns.lineplot(x=x[:-1].detach(), y=y.detach(), label = f"layer {index}")
-        legend.append(f"layer {index}")
+        sns.lineplot(x=x[:-1].detach(), y=y.detach(), label=f"layer {index}")
 plt.title("Activation Distribution")
 plt.savefig("images/activation_distributions")
 
 print("\nActivation gradient distribution stats")
 plt.figure(figsize=(20, 5))
-legend = []
 for index, layer in enumerate(model):
     if isinstance(layer, Tanh):
         tanh_output_grad = layer.output.grad
@@ -365,10 +371,42 @@ for index, layer in enumerate(model):
             f"Standard deviation {tanh_output_grad.std():.4f}"
         )
         y, x = torch.histogram(tanh_output_grad.cpu(), density=True)
-        sns.lineplot(x=x[:-1].detach(), y=y.detach(), label = f"layer {index}")
-        legend.append(f"layer {index}")
+        sns.lineplot(x=x[:-1].detach(), y=y.detach(), label=f"layer {index}")
 plt.title("Activation Gradient Distribution")
 plt.savefig("images/activation_gradient_distributions")
+
+
+parameters = [parameter for layer in model for parameter in layer.parameters()]
+print("\nWeights gradient distribution stats")
+plt.figure(figsize=(20, 5))
+for index, parameter in enumerate(parameters):
+    weight_grad = parameter.grad
+    if parameter.ndim == 2:
+        print(
+            f"Weight {tuple(parameter.shape)} | Mean {weight_grad.mean():.6f} | "
+            f"Standard deviation {weight_grad.std():.4f} | "
+            f"grad:data {weight_grad.std()/parameter.std()}"
+        )
+        y, x = torch.histogram(weight_grad.cpu(), density=True)
+        sns.lineplot(
+            x=x[:-1].detach(),
+            y=y.detach(),
+            label=f"Weight {index} {tuple(parameter.shape)}"
+        )
+plt.title("Weight Gradient Distribution")
+plt.savefig("images/weights_gradient_distributions")
+
+plt.figure(figsize=(20, 5))
+for index, parameter in enumerate(parameters):
+    if parameter.ndim == 2:
+        sns.lineplot(
+            x = range(len([update_ratio[j][index] for j in range(len(update_ratio))])),
+            y = [update_ratio[j][index] for j in range(len(update_ratio))],
+            label=f"param {index}"
+        )
+plt.axhline(y=-3, color='black', linestyle='-', label="Standard")
+plt.title("Update ratio over time.")
+plt.savefig("images/update_ratio_over_time")
 
 with torch.no_grad():
     for layer in model:
