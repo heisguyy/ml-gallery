@@ -1,7 +1,6 @@
 """
 This module shows the various ways normalization could be implemented
 in the previous MLP architecture.
-# TO DO: add the remaining plots
 # TO DO: do the youtube exercises
 Exercises:
 E01: I did not get around to seeing what happens when you initialize all weights and biases to zero.
@@ -21,6 +20,7 @@ norm group norm, instance norm)
 """
 
 # pylint: disable=redefined-outer-name,too-many-instance-attributes, too-many-locals, too-many-arguments
+import math
 import random
 from typing import Tuple, List, Union
 import matplotlib.pyplot as plt
@@ -68,13 +68,14 @@ class Linear:
     """
 
     def __init__(self, in_features: int, out_features: int, bias: bool = True) -> None:
-        self.weight = torch.normal(
-            0,
-            (1 / (in_features**0.5)),
-            (in_features, out_features),
-            generator=GENERATOR,
-            device=DEVICE,
-        )
+        # self.weight = torch.normal(
+        #     0,
+        #     (1 / (in_features**0.5)),
+        #     (in_features, out_features),
+        #     generator=GENERATOR,
+        #     device=DEVICE,
+        # )
+        self.weight = torch.zeros((in_features,out_features),device=DEVICE)
         self.bias = torch.zeros(out_features, device=DEVICE) if bias else None
         self.output = None
 
@@ -102,7 +103,8 @@ class BatchNorm:
         self.eps = eps
         self.momentum = momentum
         self.training = True
-        self.gamma = torch.ones(num_features, device=DEVICE)
+        # self.gamma = torch.ones(num_features, device=DEVICE)
+        self.gamma = torch.zeros(num_features, device=DEVICE)
         self.beta = torch.zeros(num_features, device=DEVICE)
         self.running_mean = torch.zeros(num_features, device=DEVICE)
         self.running_var = torch.ones(num_features, device=DEVICE)
@@ -246,7 +248,8 @@ def train(
     decayed_learning_rate_2 = learning_rate * 0.1**2
     parameters = [parameter for layer in model for parameter in layer.parameters()]
     print(
-        f"\nTraining model with {sum(parameter.nelement() for parameter in parameters)} parameters"
+        f"\nTraining model with {len(parameters)} parameters "
+        f"with {sum(parameter.nelement() for parameter in parameters)} values"
     )
     for parameter in parameters:
         parameter.requires_grad = True
@@ -396,14 +399,32 @@ for index, parameter in enumerate(parameters):
 plt.title("Weight Gradient Distribution")
 plt.savefig("images/weights_gradient_distributions")
 
+# plt.figure(figsize=(20, 5))
+# for index, parameter in enumerate(parameters):
+#     param_update_ratios  = [update_ratio[j][index] for j in range(len(update_ratio))]
+#     if parameter.ndim == 2:
+#         sns.lineplot(
+#             x = range(len(param_update_ratios)),
+#             y = param_update_ratios,
+#             label=f"param {index}"
+#         )
+# plt.axhline(y=-3, color='black', linestyle='-', label="Standard")
+# plt.title("Update ratio over time.")
+# plt.savefig("images/update_ratio_over_time")
+
+print("\n")
 plt.figure(figsize=(20, 5))
 for index, parameter in enumerate(parameters):
-    if parameter.ndim == 2:
+    param_update_ratios  = [update_ratio[j][index] for j in range(len(update_ratio))]
+    if not any(math.isnan(x) for x in param_update_ratios):
+        print(f"Parameter at index {index} with shape ({parameter.shape}) trained.")
         sns.lineplot(
-            x = range(len([update_ratio[j][index] for j in range(len(update_ratio))])),
-            y = [update_ratio[j][index] for j in range(len(update_ratio))],
+            x = range(len(param_update_ratios)),
+            y = param_update_ratios,
             label=f"param {index}"
         )
+    else:
+        print(f"Parameter at index {index} with shape ({parameter.shape}) did not train.")
 plt.axhline(y=-3, color='black', linestyle='-', label="Standard")
 plt.title("Update ratio over time.")
 plt.savefig("images/update_ratio_over_time")
