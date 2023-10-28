@@ -1,20 +1,6 @@
 """
 This module shows the various ways normalization could be implemented
 in the previous MLP architecture.
-# TO DO: do the youtube exercises
-Exercises:
-E01: I did not get around to seeing what happens when you initialize all weights and biases to zero.
-Try this and train the neural net. You might think either that 1) the network trains just fine or 2) 
-the network doesn't train at all, but actually it is 3) the network trains but only partially, and 
-achieves a pretty bad final performance. Inspect the gradients and activations to figure out what is 
-happening and why the network is only partially training, and what part is being trained exactly.
-- E02: BatchNorm, unlike other normalization layers like LayerNorm/GroupNorm etc. has the big 
-advantage that after training, the batchnorm gamma/beta can be "folded into" the weights of the 
-preceeding Linear layers, effectively erasing the need to forward it at test time. Set up a small 
-3-layer MLP with batchnorms, train the network, then "fold" the batchnorm gamma/beta into the 
-preceeding Linear layer's W,b by creating a new W2, b2 and erasing the batch norm. Verify that this 
-gives the same forward pass during inference. i.e. we see that the batchnorm is there just for 
-stabilizing the training, and can be thrown out after training is done! pretty cool.
 # TO DO: Read the mentioned ML papers(Delving deep into rectifiers, rethinking batch norm, layer 
 norm group norm, instance norm)
 """
@@ -68,14 +54,14 @@ class Linear:
     """
 
     def __init__(self, in_features: int, out_features: int, bias: bool = True) -> None:
-        # self.weight = torch.normal(
-        #     0,
-        #     (1 / (in_features**0.5)),
-        #     (in_features, out_features),
-        #     generator=GENERATOR,
-        #     device=DEVICE,
-        # )
-        self.weight = torch.zeros((in_features,out_features),device=DEVICE)
+        self.weight = torch.normal(
+            0,
+            (1 / (in_features**0.5)),
+            (in_features, out_features),
+            generator=GENERATOR,
+            device=DEVICE,
+        )
+        # self.weight = torch.zeros((in_features,out_features),device=DEVICE)
         self.bias = torch.zeros(out_features, device=DEVICE) if bias else None
         self.output = None
 
@@ -103,8 +89,8 @@ class BatchNorm:
         self.eps = eps
         self.momentum = momentum
         self.training = True
-        # self.gamma = torch.ones(num_features, device=DEVICE)
-        self.gamma = torch.zeros(num_features, device=DEVICE)
+        self.gamma = torch.ones(num_features, device=DEVICE)
+        # self.gamma = torch.zeros(num_features, device=DEVICE)
         self.beta = torch.zeros(num_features, device=DEVICE)
         self.running_mean = torch.zeros(num_features, device=DEVICE)
         self.running_var = torch.ones(num_features, device=DEVICE)
@@ -316,22 +302,22 @@ labels = torch.tensor(labels, device=DEVICE)
 
 model = [
     Embedding(len(unique_characters), EMBEDDING_LENGTH),
-    Linear(EMBEDDING_LENGTH * BLOCK_SIZE, HIDDEN_LAYER),
+    Linear(EMBEDDING_LENGTH * BLOCK_SIZE, HIDDEN_LAYER, bias=False),
     BatchNorm(HIDDEN_LAYER),
     Tanh(),
-    Linear(HIDDEN_LAYER, HIDDEN_LAYER),
+    Linear(HIDDEN_LAYER, HIDDEN_LAYER, bias=False),
     BatchNorm(HIDDEN_LAYER),
     Tanh(),
-    Linear(HIDDEN_LAYER, HIDDEN_LAYER),
+    Linear(HIDDEN_LAYER, HIDDEN_LAYER, bias=False),
     BatchNorm(HIDDEN_LAYER),
     Tanh(),
-    Linear(HIDDEN_LAYER, HIDDEN_LAYER),
+    Linear(HIDDEN_LAYER, HIDDEN_LAYER, bias=False),
     BatchNorm(HIDDEN_LAYER),
     Tanh(),
-    Linear(HIDDEN_LAYER, HIDDEN_LAYER),
+    Linear(HIDDEN_LAYER, HIDDEN_LAYER, bias=False),
     BatchNorm(HIDDEN_LAYER),
     Tanh(),
-    Linear(HIDDEN_LAYER, len(unique_characters)),
+    Linear(HIDDEN_LAYER, len(unique_characters), bias=False),
     BatchNorm(len(unique_characters)),
 ]
 with torch.no_grad():
@@ -394,45 +380,59 @@ for index, parameter in enumerate(parameters):
         sns.lineplot(
             x=x[:-1].detach(),
             y=y.detach(),
-            label=f"Weight {index} {tuple(parameter.shape)}"
+            label=f"Weight {index} {tuple(parameter.shape)}",
         )
 plt.title("Weight Gradient Distribution")
 plt.savefig("images/weights_gradient_distributions")
 
+plt.figure(figsize=(20, 5))
+for index, parameter in enumerate(parameters):
+    param_update_ratios = [update_ratio[j][index] for j in range(len(update_ratio))]
+    if parameter.ndim == 2:
+        sns.lineplot(
+            x=range(len(param_update_ratios)),
+            y=param_update_ratios,
+            label=f"param {index}",
+        )
+plt.axhline(y=-3, color="black", linestyle="-", label="Standard")
+plt.title("Update ratio over time.")
+plt.savefig("images/update_ratio_over_time")
+
+# print("\n")
 # plt.figure(figsize=(20, 5))
 # for index, parameter in enumerate(parameters):
 #     param_update_ratios  = [update_ratio[j][index] for j in range(len(update_ratio))]
-#     if parameter.ndim == 2:
+#     if not any(math.isnan(x) for x in param_update_ratios):
+#         print(f"Parameter at index {index} with shape ({parameter.shape}) trained.")
 #         sns.lineplot(
 #             x = range(len(param_update_ratios)),
 #             y = param_update_ratios,
 #             label=f"param {index}"
 #         )
+#     else:
+#         print(f"Parameter at index {index} with shape ({parameter.shape}) did not train.")
 # plt.axhline(y=-3, color='black', linestyle='-', label="Standard")
 # plt.title("Update ratio over time.")
 # plt.savefig("images/update_ratio_over_time")
 
-print("\n")
-plt.figure(figsize=(20, 5))
-for index, parameter in enumerate(parameters):
-    param_update_ratios  = [update_ratio[j][index] for j in range(len(update_ratio))]
-    if not any(math.isnan(x) for x in param_update_ratios):
-        print(f"Parameter at index {index} with shape ({parameter.shape}) trained.")
-        sns.lineplot(
-            x = range(len(param_update_ratios)),
-            y = param_update_ratios,
-            label=f"param {index}"
+for index, layer in enumerate(model):
+    if isinstance(layer, Linear):
+        layer.weight = (model[index + 1].gamma * layer.weight) / torch.sqrt(
+            model[index + 1].running_var + model[index + 1].eps
         )
-    else:
-        print(f"Parameter at index {index} with shape ({parameter.shape}) did not train.")
-plt.axhline(y=-3, color='black', linestyle='-', label="Standard")
-plt.title("Update ratio over time.")
-plt.savefig("images/update_ratio_over_time")
+        layer.bias = model[index + 1].beta - (
+            model[index + 1].gamma * model[index + 1].running_mean
+        ) / torch.sqrt(model[index + 1].running_var + model[index + 1].eps)
+
+model = [layer for layer in model if not isinstance(layer, BatchNorm)]
+
+print("\nLayers in our model currently.")
+print([f"{layer.__class__.__name__}" for layer in model])
 
 with torch.no_grad():
-    for layer in model:
-        if isinstance(layer, BatchNorm):
-            layer.eval()
+    # for layer in model:
+    #     if isinstance(layer, BatchNorm):
+    #         layer.eval()
 
     val_x, val_y = validation_set[0], validation_set[1]
     for layer in model:
