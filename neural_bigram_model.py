@@ -3,6 +3,7 @@ The script is the implementation of a simple probalistic bigram language model.
 This is a code along with Andrej Karpathy's zero to hero neural network series.
 https://www.youtube.com/watch?v=PaCmpygFfXo&t=3740s
 """
+# pylint: disable=not-callable
 import torch
 import torch.nn.functional as F
 
@@ -31,15 +32,17 @@ for word in data:
         labels.append(character_2_index)
 features = torch.tensor(features, device=DEVICE)
 labels = torch.tensor(labels, device=DEVICE)
-encoded_features = F.one_hot(features, num_classes=len(unique_characters)).float()
+encoded_features = F.one_hot(
+    features, num_classes=len(unique_characters)
+).float()
 
 # training
 LEARNING_RATE = 50
-generator = torch.Generator(device=DEVICE).manual_seed(12000)
+GENERATOR = torch.Generator(device=DEVICE).manual_seed(12000)
 weights = torch.randn(
     (len(unique_characters), len(unique_characters)),
     device=DEVICE,
-    generator=generator,
+    generator=GENERATOR,
     requires_grad=True,
 )
 EPOCHS = 200
@@ -64,8 +67,8 @@ for epoch in range(1, EPOCHS + 1):
 
 # inference
 generated_string = ""  # pylint: disable=invalid-name
-generator = torch.Generator(device=DEVICE)
-character_index = torch.tensor([0], device=DEVICE)  # pylint: disable=invalid-name
+GENERATOR = torch.Generator(device=DEVICE)
+character_index = torch.tensor([0], device=DEVICE)# pylint: disable=invalid-name
 accumulated_loss = 0  # pylint: disable=invalid-name
 with torch.no_grad():
     while True:
@@ -75,9 +78,11 @@ with torch.no_grad():
         ).float()
         logits = encoded_character @ weights
         bigram_count = logits.exp()
-        bigram_probabilities = bigram_count / bigram_count.sum(dim=1, keepdim=True)
+        bigram_probabilities = bigram_count / bigram_count.sum(
+            dim=1, keepdim=True
+        )
         character_index = torch.multinomial(
-            bigram_probabilities, 1, replacement=True, generator=generator
+            bigram_probabilities, 1, replacement=True, generator=GENERATOR
         ).item()
         loss = (
             -bigram_probabilities[0, character_index].log()

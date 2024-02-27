@@ -21,14 +21,16 @@ def split_data(
     Args:
         features torch.Tensor: Inputs into the model.
         labels torch.Tensor: labels to the inputs.
-        proportions (List[int], optional): Proportions for the split in this order,
-        [train_set, validation_set, test_set]. Defaults to [0.8,0.1,0.1].
+        proportions (List[int], optional): Proportions for the split in this 
+        order, [train_set, validation_set, test_set]. Defaults to [0.8,0.1,0.1].
 
     Returns:
         Tuple: The splitted data in this order, ((train_features, train_labels),
         (validation_features, validation_labels), (test_features, test_labels))
     """
-    assert len(inputs) == len(outputs), "The length of features and labels aren't equal"
+    assert len(inputs) == len(outputs), (
+        "The length of features and labels aren't equal"
+    )
     indexes = list(range(len(inputs)))
     if shuffle:
         random.shuffle(indexes)
@@ -39,7 +41,9 @@ def split_data(
             len(indexes) * (proportions[0] + proportions[1])
         )
     ]
-    test_indexes = indexes[int(len(indexes) * (proportions[0] + proportions[1])) :]
+    test_indexes = indexes[
+        int(len(indexes) * (proportions[0] + proportions[1])) :
+    ]
 
     train_features = features[train_indexes]
     train_labels = labels[train_indexes]
@@ -80,7 +84,7 @@ def train(
           at each epoch
 
     Returns:
-        Tuple[torch.Tensor, dict]: A tuple of the models weights and a dictionary
+        Tuple[torch.Tensor, dict]:A tuple of the models weights and a dictionary
         containing both training and validations losses recorded during training.
     """
     loss = {"training losses": [], "validation losses": []}
@@ -104,7 +108,8 @@ def train(
             loss["validation losses"].append(valid_loss.item())
         if epoch % 10 == 0:
             print(
-                f"Epoch {epoch} training loss {train_loss}, validation loss {valid_loss}"
+                f"Epoch {epoch} training loss {train_loss}, "
+                f"validation loss {valid_loss}"
             )
     return model_weights, loss
 
@@ -223,7 +228,9 @@ with torch.no_grad():
             num_samples=1,
             replacement=True,
         ).item()
-        inference_loss = F.cross_entropy(logits,torch.tensor([character_index], device=DEVICE))
+        inference_loss = F.cross_entropy(
+            logits,torch.tensor([character_index], device=DEVICE)
+        )
         accumulated_loss += inference_loss
         if character_index == 0:
             break

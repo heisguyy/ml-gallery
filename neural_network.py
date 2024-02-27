@@ -88,10 +88,12 @@ class Scaler:
 
     def tanh(self) -> "Scaler":
         """
-        Function that implements the forward and backward pass of tanh activation function.
+        Function that implements the forward and backward pass of tanh
+        activation function.
 
         Returns:
-            Scaler: A Scaler object with the data being the result of the tanh function.
+            Scaler: A Scaler object with the data being the result of the tanh
+            function.
         """
         tan_h = (math.exp(2 * self.data) - 1) / (math.exp(2 * self.data) + 1)
         out = Scaler(tan_h, (self,), "tanh")
@@ -104,10 +106,12 @@ class Scaler:
 
     def exp(self) -> "Scaler":
         """
-        Function that implements the forward and backward pass of exponential function.
+        Function that implements the forward and backward pass of exponential
+        function.
 
         Returns:
-            Scaler: A Scaler object with the data being the result of the exponential function.
+            Scaler: A Scaler object with the data being the result of the
+            exponential function.
         """
         out = Scaler(math.exp(self.data), (self,), "exp")
 
@@ -145,8 +149,8 @@ def trace(root: Scaler) -> Tuple[set, set]:
         root (Scalar): Scalar object that is the root of the graph.
 
     Returns:
-        Tuple[set,set]: A tuple where the first element is a set of all the nodes
-        and the second element is the set of all edges.
+        Tuple[set,set]: A tuple where the first element is a set of all the
+        nodes and the second element is the set of all edges.
     """
     nodes, edges = set(), set()
 
@@ -171,8 +175,8 @@ def draw_graph(root: Scaler, file_name: str = "result") -> Digraph:
         Defaults to "result.svg".
 
     Returns:
-        Digraph: A graphviz Digraph object which shows the relation in the neural network
-        by connecting the nodes with edges.
+        Digraph: A graphviz Digraph object which shows the relation in the
+        neural network by connecting the nodes with edges.
     """
     graph = Digraph(format="svg", graph_attr={"rankdir": "LR"})  # LR = left to right
     nodes, edges = trace(root)
@@ -181,7 +185,10 @@ def draw_graph(root: Scaler, file_name: str = "result") -> Digraph:
         # for any value in the graph, create a rectangular ('record') node for it
         graph.node(
             name=uid,
-            label=f" {node.label} | data: { node.data:.4f} | grad: {node.grad:.4f} ",
+            label=(
+                f" {node.label} | data: { node.data:.4f} "
+                f"| grad: {node.grad:.4f} "
+            ),
             shape="record",
         )
         if node._op:
@@ -203,7 +210,9 @@ class Neuron:
     """
 
     def __init__(self, number_of_inputs: int) -> None:
-        self.weights = [Scaler(random.uniform(-1, 1)) for _ in range(number_of_inputs)]
+        self.weights = [
+            Scaler(random.uniform(-1, 1)) for _ in range(number_of_inputs)
+        ]
         self.bias = Scaler(random.uniform(-1, 1))
 
     def __call__(self, inputs: List) -> Scaler:
@@ -228,7 +237,9 @@ class Layer:
     """
 
     def __init__(self, number_of_inputs: int, number_of_neurons: int) -> None:
-        self.neurons = [Neuron(number_of_inputs) for _ in range(number_of_neurons)]
+        self.neurons = [
+            Neuron(number_of_inputs) for _ in range(number_of_neurons)
+        ]
 
     def __call__(self, inputs: List) -> Union[List, Scaler]:
         out = [neuron(inputs) for neuron in self.neurons]
@@ -242,7 +253,8 @@ class Layer:
             List[Scaler]: This is a list of all the parameters in a layer.
         """
         layer_parameters = [
-            parameter for neuron in self.neurons for parameter in neuron.parameters()
+            parameter for neuron in self.neurons
+            for parameter in neuron.parameters()
         ]
         return layer_parameters
 
@@ -255,7 +267,9 @@ class MLP:
     def __init__(
         self, number_of_inputs: int, hidden_layers: List, number_of_outputs: int
     ) -> None:
-        layers_definition = [number_of_inputs] + hidden_layers + [number_of_outputs]
+        layers_definition = (
+            [number_of_inputs] + hidden_layers + [number_of_outputs]
+        )
         self.layers = [
             Layer(layers_definition[i], layers_definition[i + 1])
             for i in range(len(layers_definition) - 1)
@@ -274,7 +288,8 @@ class MLP:
             List[Scaler]: A list of all the parameters in a network
         """
         network_parameters = [
-            parameter for layer in self.layers for parameter in layer.parameters()
+            parameter for layer in self.layers
+            for parameter in layer.parameters()
         ]
         return network_parameters
 
@@ -287,13 +302,15 @@ def train(model: MLP, data: List[List], targets: List, epochs: int = 10):
         model (MLP): The model to train
         data (List[List]): List of features
         targets (List): The target for those features
-        epochs (int, optional): Number of times to go over the forward and backward pass.
-        Defaults to 10.
+        epochs (int, optional): Number of times to go over the forward and
+        backward pass. Defaults to 10.
     """
     learning_rate = 0.1
     for epoch in range(1, epochs + 1):
         y_preds = [model(feature) for feature in data]
-        loss = sum((y_pred - target) ** 2 for y_pred, target in zip(y_preds, targets))
+        loss = sum(
+            (y_pred - target) ** 2 for y_pred, target in zip(y_preds, targets)
+        )
         print(f"Epoch {epoch}: {loss.data}")
         for parameter in model.parameters():
             parameter.grad = 0.0

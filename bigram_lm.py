@@ -59,7 +59,10 @@ index_to_character = {
 }
 
 bigram_count = torch.zeros(
-    (len(unique_characters), len(unique_characters)), device=DEVICE, dtype=torch.int16
+    (len(unique_characters),
+    len(unique_characters)),
+    device=DEVICE,
+    dtype=torch.int16,
 )
 for word in data:
     character = [SPECIAL_TOKEN] + list(word) + [SPECIAL_TOKEN]
@@ -77,13 +80,13 @@ bigram_probabilities = bigram_count / bigram_count.sum(dim=1, keepdim=True)
 plot_heatmap(bigram_probabilities, "images/bigram_probabilities.png")
 
 generated_string = ""  # pylint: disable=invalid-name
-generator = torch.Generator(device=DEVICE).manual_seed(1500)
+GENERATOR = torch.Generator(device=DEVICE).manual_seed(1500)
 character_index = 0  # pylint: disable=invalid-name
 negative_log_likelihood = 0  # pylint: disable=invalid-name
 while True:
     probabilities = bigram_probabilities[character_index]
     character_index = torch.multinomial(
-        probabilities, 1, replacement=True, generator=generator
+        probabilities, 1, replacement=True, generator=GENERATOR
     ).item()
     log_character_probability = torch.log(probabilities[character_index])
     negative_log_likelihood -= log_character_probability

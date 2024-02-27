@@ -1,6 +1,6 @@
 """
-This is a code-along manual implemeentation of backpropagation algorithm for a neural network.
-https://www.youtube.com/watch?v=VMj-3S1tku0
+This is a code-along manual implemeentation of backpropagation algorithm for a
+neural network. https://www.youtube.com/watch?v=VMj-3S1tku0
 """
 from neural_network import MLP, Layer, Neuron, Scaler, draw_graph, train
 
@@ -187,7 +187,9 @@ draw_graph(result, "images/MLP")
 
 # Using MLP class, a little more complex example
 neural_network = MLP(3, [4, 4], 1)
-features = [[2.0, 3.0, -1.0], [3.0, -1.0, 0.5], [0.5, 1.0, 1.0], [1.0, 1.0, -1.0]]
+features = [
+    [2.0, 3.0, -1.0], [3.0, -1.0, 0.5], [0.5, 1.0, 1.0], [1.0, 1.0, -1.0]
+]
 target = [1.0, -1.0, -1.0, 1.0]
 train(neural_network, features, target)
 predictions = [neural_network(feature) for feature in features]

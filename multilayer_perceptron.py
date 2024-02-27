@@ -1,7 +1,7 @@
 """
-This is an implementation of A Neural Probabilistic Language Model by Bengio et al, 2003.
-It is a code along with Andrej Karpathy's zero to hero neural network series.
-https://www.youtube.com/watch?v=TCH_1BHY58I&t=236s
+This is an implementation of A Neural Probabilistic Language Model by Bengio et
+al, 2003. It is a code along with Andrej Karpathy's zero to hero neural network
+series. https://www.youtube.com/watch?v=TCH_1BHY58I&t=236s
 """
 # pylint: disable=redefined-outer-name, invalid-name
 import random
@@ -25,14 +25,16 @@ def split_data(
     Args:
         features torch.Tensor: Inputs into the model.
         labels torch.Tensor: labels to the inputs.
-        proportions (List[int], optional): Proportions for the split in this order,
-        [train_set, validation_set, test_set]. Defaults to [0.8,0.1,0.1].
+        proportions (List[int], optional): Proportions for the split in this
+        order, [train_set, validation_set, test_set]. Defaults to [0.8,0.1,0.1].
 
     Returns:
         Tuple: The splitted data in this order, ((train_features, train_labels),
         (validation_features, validation_labels), (test_features, test_labels))
     """
-    assert len(inputs) == len(outputs), "The length of features and labels aren't equal"
+    assert len(inputs) == len(outputs), (
+        "The length of features and labels aren't equal"
+    )
     indexes = list(range(len(inputs)))
     if shuffle:
         random.shuffle(indexes)
@@ -43,7 +45,9 @@ def split_data(
             len(indexes) * (proportions[0] + proportions[1])
         )
     ]
-    test_indexes = indexes[int(len(indexes) * (proportions[0] + proportions[1])) :]
+    test_indexes = indexes[
+        int(len(indexes) * (proportions[0] + proportions[1])) :
+    ]
 
     train_features = features[train_indexes]
     train_labels = labels[train_indexes]
@@ -73,9 +77,9 @@ def train(
     Function to train our classifier
 
     Args:
-        parameters (List[torch.Tensor]): Model parameters including embedding, weights
-        and biases. They should be in the sequence [embedding_layer, weights_1,
-        bias_1, weights_2, bias_2]
+        parameters (List[torch.Tensor]): Model parameters including embedding,
+        weights and biases. They should be in the sequence [embedding_layer,
+        weights_1, bias_1, weights_2, bias_2]
         training_set (Tuple[torch.Tensor]): dataset used to train classifier
         as a tuple of the features and labels i.e features, labels
         val_set (Tuple[torch.Tensor]): dataset used to validate classifier
@@ -83,11 +87,11 @@ def train(
         epochs (int): Number of iterations to train for
         learning_rate (float): Value controlling the rate of change of weights
         at each epoch
-        batch_size (int): The size of training data to optimize on at a particular
-        instance. It defaults to 128.
+        batch_size (int): The size of training data to optimize on at a
+        particular instance. It defaults to 128.
 
     Returns:
-        Tuple[torch.Tensor, dict]: A tuple of the models weights and a dictionary
+        Tuple[torch.Tensor, dict]:A tuple of the models weights and a dictionary
         containing both training and validations losses recorded during training.
     """
     losses = {"training loss": [], "validation loss": []}
@@ -121,19 +125,22 @@ def train(
             batch_index = torch.randint(0, val_set[0].shape[0], (batch_size,))
             embeddings = parameters[0][val_set[0][batch_index]]
             hidden_layer_output = torch.tanh(
-                embeddings.view(-1, BLOCK_SIZE * EMBEDDING_LENGTH) @ parameters[1]
-                + parameters[2]
+                embeddings.view(
+                    -1, BLOCK_SIZE * EMBEDDING_LENGTH
+                ) @ parameters[1] + parameters[2]
             )
             logits = (
-                embeddings.view(-1, BLOCK_SIZE * EMBEDDING_LENGTH) @ parameters[3]
-                + hidden_layer_output @ parameters[4]
+                embeddings.view(
+                    -1, BLOCK_SIZE * EMBEDDING_LENGTH
+                ) @ parameters[3] + hidden_layer_output @ parameters[4]
                 + parameters[5]
             )
             val_loss = F.cross_entropy(logits, val_set[1][batch_index])
             losses["validation loss"].append(val_loss.item())
         if epoch % 1000 == 0 or epoch == 1:
             print(
-                f"Epoch {epoch} Training Loss: {train_loss}, Validation Loss: {val_loss}"
+                f"Epoch {epoch} Training Loss: {train_loss}, "
+                f"Validation Loss: {val_loss}"
             )
 
     return parameters, losses
@@ -227,8 +234,9 @@ for epoch in range(1, EPOCHS + 1):
         embeddings.view(-1, BLOCK_SIZE * EMBEDDING_LENGTH) @ weights_1 + bias_1
     )
     logits = (
-        embeddings.view(-1, BLOCK_SIZE * EMBEDDING_LENGTH) @ direct_connection_weights
-        + hidden_layer_output @ weights_2
+        embeddings.view(
+            -1, BLOCK_SIZE * EMBEDDING_LENGTH
+        ) @ direct_connection_weights + hidden_layer_output @ weights_2
         + bias_2
     )
     loss = F.cross_entropy(logits, labels[batch_index])
