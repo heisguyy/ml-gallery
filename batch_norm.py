@@ -148,6 +148,29 @@ class BatchNorm:
         self.training = True
 
 
+class PReLU:
+    """
+    Class to define a Parametric ReLu.
+    """
+
+    def __init__(self, coefficient=None) -> None:
+        if coefficient is not None:
+            self.coefficient = torch.tensor(coefficient, device=DEVICE)
+        else:
+            self.coefficient = torch.tensor(0.25, device=DEVICE)
+        self.output = None
+
+    def __call__(self, inputs: torch.Tensor) -> torch.Tensor:
+        self.output = torch.where(inputs > 0, inputs, inputs * self.coefficient)
+        return self.output
+
+    def parameters(self) -> List:
+        """
+        Function to return the parameters of the layer
+        """
+        return [self.coefficient]
+
+
 class Tanh:
     """
     Class to define tanh layer
@@ -327,19 +350,24 @@ model = [
     Embedding(len(unique_characters), EMBEDDING_LENGTH),
     Linear(EMBEDDING_LENGTH * BLOCK_SIZE, HIDDEN_LAYER, bias=False),
     BatchNorm(HIDDEN_LAYER),
-    Tanh(),
+    # Tanh(),
+    PReLU(),
     Linear(HIDDEN_LAYER, HIDDEN_LAYER, bias=False),
     BatchNorm(HIDDEN_LAYER),
-    Tanh(),
+    # Tanh(),
+    PReLU(),
     Linear(HIDDEN_LAYER, HIDDEN_LAYER, bias=False),
     BatchNorm(HIDDEN_LAYER),
-    Tanh(),
+    # Tanh(),
+    PReLU(),
     Linear(HIDDEN_LAYER, HIDDEN_LAYER, bias=False),
     BatchNorm(HIDDEN_LAYER),
-    Tanh(),
+    # Tanh(),
+    PReLU(),
     Linear(HIDDEN_LAYER, HIDDEN_LAYER, bias=False),
     BatchNorm(HIDDEN_LAYER),
-    Tanh(),
+    # Tanh(),
+    PReLU(),
     Linear(HIDDEN_LAYER, len(unique_characters), bias=False),
     BatchNorm(len(unique_characters)),
 ]
