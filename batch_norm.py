@@ -1,8 +1,7 @@
 """
 This module shows the various ways normalization could be implemented
 in the previous MLP architecture.
-# TO DO: Read the mentioned ML papers(Batch normalization, Delving deep into 
-rectifiers, rethinking batch norm, layer 
+# TO DO: Read the mentioned ML papers(Batch normalization, rethinking batch norm, layer 
 norm group norm, instance norm)
 """
 
